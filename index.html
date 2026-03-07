@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lupus in Fabula</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blood: #8B0000;
+    --blood-light: #c0392b;
+    --gold: #c9a84c;
+    --gold-dim: #7a6030;
+    --parchment: #f0e6c8;
+    --dark: #0a0806;
+    --dark2: #120e09;
+    --dark3: #1c1610;
+    --fog: rgba(200,180,130,0.07);
+    --text: #e8d9b0;
+    --text-dim: #9a8a65;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'Crimson Text', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* NOISE TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+
+
+  /* SCREENS */
+  .screen { display: none; min-height: 100vh; position: relative; z-index: 1; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ===== SCREEN 1: SETUP ===== */
+  #screen-setup {
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .title-block {
+    text-align: center;
+    margin-bottom: 50px;
+    animation: fadeDown 1s ease both;
+  }
+
+  .title-block .eyebrow {
+    font-family: 'Crimson Text', serif;
+    font-style: italic;
+    color: var(--gold-dim);
+    font-size: 1rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .title-block h1 {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: clamp(2rem, 6vw, 4rem);
+    color: var(--gold);
+    text-shadow: 0 0 40px rgba(201,168,76,0.4), 0 2px 4px rgba(0,0,0,0.8);
+    line-height: 1.1;
+  }
+
+  .title-block .subtitle {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    color: var(--text-dim);
+    font-size: 1.1rem;
+    margin-top: 12px;
+  }
+
+  .setup-card {
+    background: linear-gradient(135deg, var(--dark2), var(--dark3));
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 4px;
+    padding: 40px;
+    width: 100%;
+    max-width: 560px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(201,168,76,0.1);
+    animation: fadeUp 1s ease 0.3s both;
+  }
+
+  .section-label {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.65rem;
+    color: var(--gold);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, rgba(201,168,76,0.3), transparent);
+  }
+
+  .player-input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  input[type="text"] {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 2px;
+    padding: 12px 16px;
+    font-family: 'Crimson Text', serif;
+    font-size: 1.05rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input[type="text"]::placeholder { color: var(--text-dim); }
+  input[type="text"]:focus {
+    border-color: rgba(201,168,76,0.5);
+    box-shadow: 0 0 12px rgba(201,168,76,0.1);
+  }
+
+  .btn {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 12px 20px;
+  }
+
+  .btn-add {
+    background: rgba(201,168,76,0.15);
+    border: 1px solid rgba(201,168,76,0.35);
+    color: var(--gold);
+  }
+  .btn-add:hover {
+    background: rgba(201,168,76,0.25);
+    box-shadow: 0 0 16px rgba(201,168,76,0.15);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--blood), #6b0000);
+    border: 1px solid rgba(139,0,0,0.6);
+    color: #ffd0d0;
+    width: 100%;
+    padding: 16px;
+    font-size: 0.75rem;
+    margin-top: 24px;
+    letter-spacing: 0.2em;
+    box-shadow: 0 4px 20px rgba(139,0,0,0.3);
+  }
+  .btn-primary:hover {
+    background: linear-gradient(135deg, var(--blood-light), var(--blood));
+    box-shadow: 0 4px 30px rgba(192,57,43,0.4);
+    transform: translateY(-1px);
+  }
+  .btn-primary:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .player-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+    min-height: 36px;
+  }
+
+  .player-tag {
+    background: rgba(201,168,76,0.1);
+    border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 2px;
+    padding: 6px 12px 6px 14px;
+    font-family: 'Crimson Text', serif;
+    font-size: 0.95rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: popIn 0.2s ease both;
+    max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .player-tag .remove {
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    transition: color 0.2s;
+  }
+  .player-tag .remove:hover { color: var(--blood-light); }
+
+  .hint {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    text-align: center;
+    margin-top: 12px;
+  }
+
+  /* ROLES CONFIG */
+  .roles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .role-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(201,168,76,0.1);
+    border-radius: 2px;
+    padding: 12px 8px;
+  }
+
+  .role-item label {
+    font-family: 'IM Fell English', serif;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .role-item .role-icon { font-size: 1.2rem; }
+
+  .role-counter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .counter-btn {
+    background: rgba(201,168,76,0.1);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 2px;
+    color: var(--gold);
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+  }
+  .counter-btn:hover { background: rgba(201,168,76,0.2); }
+
+  .counter-val {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.85rem;
+    color: var(--gold);
+    min-width: 20px;
+    text-align: center;
+  }
+
+  .roles-summary {
+    font-family: 'Crimson Text', serif;
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    text-align: center;
+    margin-top: 8px;
+  }
+  .roles-summary.ok { color: #7dbe8a; }
+  .roles-summary.error { color: var(--blood-light); }
+
+  /* ===== SCREEN 2: REVEAL ===== */
+  #screen-reveal {
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .reveal-header {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .reveal-header h2 {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: clamp(1.4rem, 4vw, 2.2rem);
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(201,168,76,0.3);
+  }
+
+  .reveal-header p {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    color: var(--text-dim);
+    margin-top: 8px;
+  }
+
+  .reveal-card {
+    background: linear-gradient(160deg, var(--dark2), var(--dark3));
+    border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 4px;
+    padding: 50px 40px;
+    width: 100%;
+    max-width: 460px;
+    text-align: center;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.7), inset 0 1px 0 rgba(201,168,76,0.15);
+    animation: fadeUp 0.6s ease 0.2s both;
+  }
+
+  .current-player-name {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: clamp(1rem, 5vw, 2.8rem);
+    color: var(--parchment);
+    text-shadow: 0 0 20px rgba(240,230,200,0.2);
+    margin-bottom: 8px;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+  }
+
+  .tap-hint {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    margin-bottom: 32px;
+  }
+
+  .role-reveal-area {
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .btn-show-role {
+    background: linear-gradient(135deg, rgba(139,0,0,0.4), rgba(139,0,0,0.1));
+    border: 1px solid rgba(139,0,0,0.5);
+    color: #ffc0c0;
+    padding: 18px 36px;
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .btn-show-role:hover {
+    background: linear-gradient(135deg, rgba(192,57,43,0.5), rgba(139,0,0,0.2));
+    box-shadow: 0 0 30px rgba(192,57,43,0.3);
+    transform: translateY(-2px);
+  }
+
+  .role-display {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    animation: revealRole 0.5s ease both;
+  }
+
+  .role-display.visible { display: flex; }
+
+  .role-emoji { font-size: 4rem; }
+
+  .role-name {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: clamp(1.2rem, 4vw, 2rem);
+    margin-top: 4px;
+  }
+
+  .role-name.lupo { color: #e74c3c; text-shadow: 0 0 20px rgba(231,76,60,0.5); }
+  .role-name.contadino { color: #7dbe8a; text-shadow: 0 0 20px rgba(125,190,138,0.3); }
+  .role-name.veggente { color: #9b59b6; text-shadow: 0 0 20px rgba(155,89,182,0.4); }
+  .role-name.medico { color: #3498db; text-shadow: 0 0 20px rgba(52,152,219,0.4); }
+  .role-name.cacciatore { color: #e67e22; text-shadow: 0 0 20px rgba(230,126,34,0.4); }
+  .role-name.strega { color: #1abc9c; text-shadow: 0 0 20px rgba(26,188,156,0.4); }
+  .role-name.speciale { color: var(--gold); text-shadow: 0 0 20px rgba(201,168,76,0.4); }
+
+  .role-desc {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    max-width: 280px;
+    line-height: 1.6;
+  }
+
+  .btn-next {
+    background: rgba(201,168,76,0.12);
+    border: 1px solid rgba(201,168,76,0.3);
+    color: var(--gold);
+    padding: 12px 28px;
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+    display: none;
+  }
+  .btn-next.visible { display: inline-block; }
+  .btn-next:hover {
+    background: rgba(201,168,76,0.2);
+    box-shadow: 0 0 16px rgba(201,168,76,0.15);
+  }
+
+  .reveal-progress {
+    font-family: 'Crimson Text', serif;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    margin-top: 20px;
+    font-style: italic;
+  }
+
+  /* ===== SCREEN 3: MASTER ===== */
+  #screen-master {
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .master-header {
+    background: linear-gradient(180deg, rgba(0,0,0,0.9), transparent);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border-bottom: 1px solid rgba(201,168,76,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(10px);
+    flex-wrap: nowrap;
+    min-height: 56px;
+  }
+
+  .master-header-right {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .master-title {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: clamp(0.6rem, 2vw, 1rem);
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(201,168,76,0.3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  .phase-badge {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .phase-badge.giorno {
+    background: rgba(255,220,80,0.1);
+    border-color: rgba(255,220,80,0.3);
+    color: #ffd850;
+  }
+  .phase-badge.notte {
+    background: rgba(100,120,200,0.1);
+    border-color: rgba(100,120,200,0.3);
+    color: #a0b0ff;
+  }
+
+  .master-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    flex: 1;
+    min-height: calc(100vh - 70px);
+  }
+
+  @media (max-width: 768px) {
+    .master-body { grid-template-columns: 1fr; }
+  }
+
+  /* LEFT: STORY PANEL */
+  .story-panel {
+    border-right: 1px solid rgba(201,168,76,0.1);
+    display: flex;
+    flex-direction: column;
+    padding: 30px;
+  }
+
+  .panel-title {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .panel-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, rgba(201,168,76,0.3), transparent);
+  }
+
+  .story-content {
+    flex: 1;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(201,168,76,0.1);
+    border-radius: 2px;
+    padding: 20px;
+    font-family: 'IM Fell English', serif;
+    font-size: 1.05rem;
+    color: var(--text);
+    line-height: 1.8;
+    white-space: pre-wrap;
+    overflow-y: auto;
+    min-height: 200px;
+  }
+
+  .story-editor {
+    width: 100%;
+    flex: 1;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 2px;
+    padding: 20px;
+    font-family: 'IM Fell English', serif;
+    font-size: 1.05rem;
+    color: var(--text);
+    line-height: 1.8;
+    resize: none;
+    outline: none;
+    min-height: 300px;
+    transition: border-color 0.2s;
+  }
+  .story-editor:focus { border-color: rgba(201,168,76,0.4); }
+  .story-editor::placeholder { color: var(--text-dim); font-style: italic; }
+
+  .story-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .btn-sm {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    padding: 8px 16px;
+    border-radius: 2px;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 0.2s;
+  }
+
+  .btn-save {
+    background: rgba(201,168,76,0.12);
+    border-color: rgba(201,168,76,0.3);
+    color: var(--gold);
+  }
+  .btn-save:hover { background: rgba(201,168,76,0.2); }
+
+  .btn-edit-toggle {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.1);
+    color: var(--text-dim);
+  }
+  .btn-edit-toggle:hover { background: rgba(255,255,255,0.08); }
+
+  /* Quick tips */
+  .tips-section { margin-top: 24px; }
+
+  .tip-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .tip-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(201,168,76,0.08);
+    border-left: 2px solid rgba(201,168,76,0.3);
+    border-radius: 0 2px 2px 0;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tip-card:hover {
+    background: rgba(201,168,76,0.05);
+    border-left-color: var(--gold);
+  }
+
+  .tip-card-title {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    color: var(--gold-dim);
+    margin-bottom: 4px;
+  }
+
+  .tip-card-text {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 0.88rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* RIGHT: PLAYERS PANEL */
+  .players-panel {
+    display: flex;
+    flex-direction: column;
+    padding: 30px;
+    overflow-y: auto;
+  }
+
+  .players-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .player-row {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(201,168,76,0.12);
+    border-radius: 2px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .player-row::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--gold);
+    opacity: 0.4;
+    transition: opacity 0.3s;
+  }
+
+  .player-row.morto {
+    opacity: 0.4;
+    background: rgba(139,0,0,0.05);
+    border-color: rgba(139,0,0,0.15);
+  }
+  .player-row.morto::before { background: var(--blood); opacity: 0.5; }
+
+  .player-row-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .player-row-name {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: clamp(0.7rem, 2vw, 0.95rem);
+    color: var(--text);
+    transition: color 0.3s;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    max-width: 180px;
+  }
+
+  .player-row.morto .player-row-name {
+    color: var(--text-dim);
+    text-decoration: line-through;
+  }
+
+  .player-row-role {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .status-btn {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.5rem;
+    letter-spacing: 0.1em;
+    padding: 6px 12px;
+    border-radius: 2px;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 0.2s;
+  }
+
+  .status-btn.vivo {
+    background: rgba(125,190,138,0.1);
+    border-color: rgba(125,190,138,0.3);
+    color: #7dbe8a;
+  }
+  .status-btn.vivo:hover {
+    background: rgba(139,0,0,0.15);
+    border-color: rgba(139,0,0,0.4);
+    color: #e74c3c;
+  }
+
+  .status-btn.morto {
+    background: rgba(139,0,0,0.1);
+    border-color: rgba(139,0,0,0.3);
+    color: #e74c3c;
+  }
+  .status-btn.morto:hover {
+    background: rgba(125,190,138,0.1);
+    border-color: rgba(125,190,138,0.3);
+    color: #7dbe8a;
+  }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(201,168,76,0.1);
+    border-radius: 2px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .stat-label {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.5rem;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  .stat-val {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 1.1rem;
+    color: var(--gold);
+  }
+
+  .stat-val.danger { color: var(--blood-light); }
+  .stat-val.safe { color: #7dbe8a; }
+
+  /* ANIMATIONS */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes revealRole {
+    from { opacity: 0; transform: scale(0.9) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(201,168,76,0.2), transparent);
+    margin: 24px 0;
+  }
+
+  /* NEW GAME BTN */
+  .btn-new-game {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text-dim);
+    padding: 6px 14px;
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.5rem;
+    letter-spacing: 0.15em;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-new-game:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.2); border-radius: 2px; }
+
+  .error-msg {
+    color: var(--blood-light);
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 0.9rem;
+    text-align: center;
+    margin-top: 8px;
+    min-height: 20px;
+  }
+</style>
+</head>
+<body>
+
+
+<!-- ===== SCREEN 1: SETUP ===== -->
+<div class="screen active" id="screen-setup">
+  <div class="title-block">
+    <div class="eyebrow">Il Villaggio Maledetto</div>
+    <h1>Lupus<br>in Fabula</h1>
+    <div class="subtitle">Una notte di segreti e inganni</div>
+  </div>
+
+  <div class="setup-card">
+    <!-- PLAYERS -->
+    <div class="section-label">Giocatori</div>
+    <div class="player-input-row">
+      <input type="text" id="player-input" placeholder="Nome del giocatore..." maxlength="30">
+      <button class="btn btn-add" onclick="addPlayer()">+ Aggiungi</button>
+    </div>
+    <div class="player-list" id="player-list"></div>
+
+    <div class="divider"></div>
+
+    <!-- ROLES -->
+    <div class="section-label">Ruoli</div>
+    <div class="roles-grid" id="roles-grid"></div>
+    <div class="roles-summary" id="roles-summary">Aggiungi giocatori per configurare i ruoli</div>
+
+    <div class="error-msg" id="setup-error"></div>
+    <button class="btn btn-primary" id="btn-start" onclick="startReveal()" disabled>
+      ☽ Inizia il Rituale ☽
+    </button>
+
+    <div class="hint">Ogni giocatore vedrà il proprio ruolo in privato</div>
+  </div>
+</div>
+
+<!-- ===== SCREEN 2: REVEAL ===== -->
+<div class="screen" id="screen-reveal">
+  <div class="reveal-header">
+    <h2>Assegnazione Ruoli</h2>
+    <p>Passate il dispositivo a turno — in segreto</p>
+  </div>
+
+  <div class="reveal-card">
+    <div class="current-player-name" id="reveal-player-name"></div>
+    <div class="tap-hint">è il momento di scoprire il tuo destino</div>
+
+    <div class="role-reveal-area">
+      <button class="btn-show-role" id="btn-show-role" onclick="showRole()">
+        Scopri il tuo ruolo
+      </button>
+
+      <div class="role-display" id="role-display">
+        <div class="role-emoji" id="role-emoji"></div>
+        <div class="role-name" id="role-name-text"></div>
+        <div class="role-desc" id="role-desc-text"></div>
+        <button class="btn-next" id="btn-next" onclick="nextPlayer()">
+          Prossimo giocatore →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="reveal-progress" id="reveal-progress"></div>
+</div>
+
+<!-- ===== SCREEN 3: MASTER ===== -->
+<div class="screen" id="screen-master">
+  <div class="master-header">
+    <div class="master-title">☽ Lupus in Fabula</div>
+    <div class="master-header-right">
+      <div class="phase-badge giorno" id="phase-badge" onclick="togglePhase()">☀ Giorno 1</div>
+      <button class="btn-new-game" onclick="newGame()">↺ Nuova</button>
+    </div>
+  </div>
+
+  <div class="master-body">
+    <!-- LEFT: STORY -->
+    <div class="story-panel">
+      <div class="panel-title">Narrativa del Master</div>
+
+      <textarea class="story-editor" id="story-editor"
+        placeholder="Scrivi qui la storia, gli eventi della notte, le azioni dei lupi...&#10;&#10;Es: 'Il villaggio si sveglia sotto un cielo plumbeo. Qualcuno è scomparso nella notte...'"></textarea>
+
+      <div class="story-actions">
+        <button class="btn-sm btn-save" onclick="saveStory()">Salva nota</button>
+        <button class="btn-sm btn-edit-toggle" onclick="clearStory()">Pulisci</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- TIPS -->
+      <div class="tips-section">
+        <div class="panel-title" style="margin-bottom:12px;">Consigli per Fase</div>
+        <div class="tip-cards" id="tip-cards"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: PLAYERS -->
+    <div class="players-panel">
+      <div class="panel-title">Giocatori</div>
+
+      <div class="stats-bar" id="stats-bar"></div>
+
+      <div class="players-grid" id="players-grid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// =====================
+// DATA
+// =====================
+const ROLES = {
+  lupo: {
+    label: 'Lupo Mannaro',
+    emoji: '🐺',
+    desc: 'Ogni notte puoi eliminare un villager. Di giorno, fingi di essere innocente.',
+    class: 'lupo',
+    defaultCount: 2
+  },
+  contadino: {
+    label: 'Contadino',
+    emoji: '🌾',
+    desc: 'Sei un innocente abitante del villaggio. Di giorno vota per eliminare i lupi.',
+    class: 'contadino',
+    defaultCount: 4
+  },
+  veggente: {
+    label: 'Veggente',
+    emoji: '🔮',
+    desc: 'Ogni notte puoi scoprire il vero ruolo di un giocatore.',
+    class: 'veggente',
+    defaultCount: 1
+  },
+  medico: {
+    label: 'Medico',
+    emoji: '💊',
+    desc: 'Ogni notte puoi proteggere un giocatore dall\'attacco dei lupi.',
+    class: 'medico',
+    defaultCount: 1
+  },
+  cacciatore: {
+    label: 'Cacciatore',
+    emoji: '🏹',
+    desc: 'Se vieni eliminato, puoi portare con te un altro giocatore.',
+    class: 'cacciatore',
+    defaultCount: 0
+  },
+  strega: {
+    label: 'Strega',
+    emoji: '🧪',
+    desc: 'Hai due pozioni: una per salvare, una per uccidere. Usale bene.',
+    class: 'strega',
+    defaultCount: 0
+  }
+};
+
+const TIPS = {
+  giorno: [
+    { title: 'Fase di Discussione', text: 'I giocatori discutono e accusano. Lasciate parlare tutti prima di votare.' },
+    { title: 'Votazione', text: 'Chi prende più voti viene eliminato. In caso di parità, decidete con una regola concordata.' },
+    { title: 'Rivelazione', text: 'Il giocatore eliminato rivela il proprio ruolo. I lupi gioiscono in segreto.' }
+  ],
+  notte: [
+    { title: 'Chiudete gli occhi', text: 'Tutti i giocatori chiudono gli occhi. Il master guida le azioni in silenzio.' },
+    { title: 'Lupi', text: 'Chiamate i lupi: aprono gli occhi e indicano la vittima. Poi richiudono.' },
+    { title: 'Veggente', text: 'Il veggente indica un giocatore: il master annuisce (lupo) o scuote la testa (innocente).' },
+    { title: 'Medico', text: 'Il medico indica il giocatore da proteggere (può scegliere sé stesso).' }
+  ]
+};
+
+// =====================
+// STATE
+// =====================
+let players = [];
+let roleCounts = {};
+let assignedRoles = [];
+let currentRevealIndex = 0;
+let isNight = false;
+let day = 1;
+let playerStatuses = [];
+let isEditingStory = true;
+
+// Init role counts from defaults
+Object.keys(ROLES).forEach(key => {
+  roleCounts[key] = ROLES[key].defaultCount;
+});
+
+// =====================
+// SETUP SCREEN
+// =====================
+function renderRolesGrid() {
+  const grid = document.getElementById('roles-grid');
+  grid.innerHTML = '';
+  Object.entries(ROLES).forEach(([key, role]) => {
+    const item = document.createElement('div');
+    item.className = 'role-item';
+    item.innerHTML = `
+      <label><span class="role-icon">${role.emoji}</span>${role.label}</label>
+      <div class="role-counter">
+        <button class="counter-btn" onclick="changeCount('${key}',-1)">−</button>
+        <span class="counter-val" id="count-${key}">${roleCounts[key]}</span>
+        <button class="counter-btn" onclick="changeCount('${key}',+1)">+</button>
+      </div>
+    `;
+    grid.appendChild(item);
+  });
+  updateRolesSummary();
+}
+
+function changeCount(key, delta) {
+  roleCounts[key] = Math.max(0, roleCounts[key] + delta);
+  document.getElementById(`count-${key}`).textContent = roleCounts[key];
+  updateRolesSummary();
+}
+
+function totalRoles() {
+  return Object.values(roleCounts).reduce((a, b) => a + b, 0);
+}
+
+function updateRolesSummary() {
+  const summary = document.getElementById('roles-summary');
+  const n = players.length;
+  const total = totalRoles();
+
+  if (n === 0) {
+    summary.textContent = 'Aggiungi giocatori per configurare i ruoli';
+    summary.className = 'roles-summary';
+    return;
+  }
+
+  if (total === n) {
+    summary.textContent = `✓ ${total} ruoli per ${n} giocatori — perfetto!`;
+    summary.className = 'roles-summary ok';
+  } else if (total < n) {
+    summary.textContent = `${total} ruoli, ${n} giocatori — mancano ${n - total} ruoli`;
+    summary.className = 'roles-summary error';
+  } else {
+    summary.textContent = `${total} ruoli, ${n} giocatori — ${total - n} ruoli in eccesso`;
+    summary.className = 'roles-summary error';
+  }
+
+  validateSetup();
+}
+
+function validateSetup() {
+  const n = players.length;
+  const btn = document.getElementById('btn-start');
+  const err = document.getElementById('setup-error');
+
+  if (n < 4) {
+    btn.disabled = true;
+    err.textContent = n > 0 ? `Servono almeno 4 giocatori (ne hai ${n})` : '';
+    return;
+  }
+
+  if (totalRoles() !== n) {
+    btn.disabled = true;
+    err.textContent = 'Il numero di ruoli deve essere uguale al numero di giocatori';
+    return;
+  }
+
+  btn.disabled = false;
+  err.textContent = '';
+}
+
+function addPlayer() {
+  const input = document.getElementById('player-input');
+  const name = input.value.trim();
+  if (!name) return;
+  if (players.includes(name)) {
+    document.getElementById('setup-error').textContent = 'Nome già presente!';
+    return;
+  }
+  players.push(name);
+  input.value = '';
+  renderPlayerList();
+  updateRolesSummary();
+  validateSetup();
+  input.focus();
+}
+
+document.getElementById('player-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addPlayer();
+});
+
+function removePlayer(name) {
+  players = players.filter(p => p !== name);
+  renderPlayerList();
+  updateRolesSummary();
+  validateSetup();
+}
+
+function renderPlayerList() {
+  const list = document.getElementById('player-list');
+  list.innerHTML = '';
+  players.forEach(name => {
+    const tag = document.createElement('div');
+    tag.className = 'player-tag';
+    tag.innerHTML = `${name} <span class="remove" onclick="removePlayer('${name}')">×</span>`;
+    list.appendChild(tag);
+  });
+}
+
+// =====================
+// START REVEAL
+// =====================
+function startReveal() {
+  // Build role pool
+  let pool = [];
+  Object.entries(roleCounts).forEach(([key, count]) => {
+    for (let i = 0; i < count; i++) pool.push(key);
+  });
+
+  // Shuffle
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+
+  // Shuffle players too
+  const shuffledPlayers = [...players];
+  for (let i = shuffledPlayers.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledPlayers[i], shuffledPlayers[j]] = [shuffledPlayers[j], shuffledPlayers[i]];
+  }
+
+  assignedRoles = shuffledPlayers.map((name, i) => ({ name, role: pool[i] }));
+  currentRevealIndex = 0;
+
+  showScreen('screen-reveal');
+  showCurrentRevealPlayer();
+}
+
+function showCurrentRevealPlayer() {
+  const current = assignedRoles[currentRevealIndex];
+  document.getElementById('reveal-player-name').textContent = current.name;
+  document.getElementById('reveal-progress').textContent =
+    `Giocatore ${currentRevealIndex + 1} di ${assignedRoles.length}`;
+
+  // Reset
+  document.getElementById('btn-show-role').style.display = 'inline-block';
+  document.getElementById('role-display').classList.remove('visible');
+  document.getElementById('btn-next').classList.remove('visible');
+}
+
+function showRole() {
+  const current = assignedRoles[currentRevealIndex];
+  const role = ROLES[current.role];
+
+  document.getElementById('role-emoji').textContent = role.emoji;
+  const nameEl = document.getElementById('role-name-text');
+  nameEl.textContent = role.label;
+  nameEl.className = `role-name ${role.class}`;
+  document.getElementById('role-desc-text').textContent = role.desc;
+
+  document.getElementById('btn-show-role').style.display = 'none';
+  document.getElementById('role-display').classList.add('visible');
+
+  const btnNext = document.getElementById('btn-next');
+  if (currentRevealIndex < assignedRoles.length - 1) {
+    btnNext.textContent = 'Prossimo giocatore →';
+  } else {
+    btnNext.textContent = '☽ Inizia la partita ☽';
+  }
+  btnNext.classList.add('visible');
+}
+
+function nextPlayer() {
+  if (currentRevealIndex < assignedRoles.length - 1) {
+    currentRevealIndex++;
+    showCurrentRevealPlayer();
+  } else {
+    startMaster();
+  }
+}
+
+// =====================
+// MASTER SCREEN
+// =====================
+function startMaster() {
+  playerStatuses = assignedRoles.map(p => ({ ...p, alive: true }));
+  isNight = false;
+  day = 1;
+
+  showScreen('screen-master');
+  renderMaster();
+  renderTips();
+}
+
+function renderMaster() {
+  renderStats();
+  renderPlayersGrid();
+  updatePhaseBadge();
+}
+
+function renderStats() {
+  const bar = document.getElementById('stats-bar');
+  const alive = playerStatuses.filter(p => p.alive).length;
+  const dead = playerStatuses.length - alive;
+
+  const roleColors = {
+    lupo: '#e74c3c', contadino: '#7dbe8a', veggente: '#9b59b6',
+    medico: '#3498db', cacciatore: '#e67e22', strega: '#1abc9c'
+  };
+
+  const roleTotals = {};
+  playerStatuses.forEach(p => {
+    if (!roleTotals[p.role]) roleTotals[p.role] = { alive: 0, total: 0 };
+    roleTotals[p.role].total++;
+    if (p.alive) roleTotals[p.role].alive++;
+  });
+
+  let roleHTML = Object.entries(roleTotals).map(([key, counts]) => {
+    const role = ROLES[key];
+    const color = roleColors[key] || 'var(--gold)';
+    return `
+      <div class="stat-item">
+        <div class="stat-label">${role.emoji} ${role.label}</div>
+        <div class="stat-val" style="color:${color}; font-size:0.95rem;">
+          ${counts.alive}<span style="color:var(--text-dim);font-size:0.7rem;">/${counts.total}</span>
+        </div>
+      </div>`;
+  }).join('');
+
+  bar.innerHTML = `
+    <div class="stat-item">
+      <div class="stat-label">☀ Vivi</div>
+      <div class="stat-val safe">${alive}</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">💀 Morti</div>
+      <div class="stat-val ${dead > 0 ? 'danger' : ''}">${dead}</div>
+    </div>
+    <div style="width:1px;background:rgba(201,168,76,0.15);margin:0 4px;align-self:stretch;"></div>
+    ${roleHTML}
+    <div style="width:1px;background:rgba(201,168,76,0.15);margin:0 4px;align-self:stretch;"></div>
+    <div class="stat-item">
+      <div class="stat-label">Turno</div>
+      <div class="stat-val">${isNight ? '🌙' : '☀'} ${day}</div>
+    </div>
+  `;
+}
+
+function renderPlayersGrid() {
+  const grid = document.getElementById('players-grid');
+  grid.innerHTML = '';
+
+  playerStatuses.forEach((player, i) => {
+    const role = ROLES[player.role];
+    const row = document.createElement('div');
+    row.className = `player-row ${player.alive ? '' : 'morto'}`;
+    row.id = `player-row-${i}`;
+
+    row.innerHTML = `
+      <div class="player-row-left">
+        <div class="player-row-name">${player.name}</div>
+        <div class="player-row-role">
+          <span>${role.emoji}</span>
+          <span style="color: var(--${role.class === 'lupo' ? 'blood-light' : 'text-dim'})">${role.label}</span>
+        </div>
+      </div>
+      <button class="status-btn ${player.alive ? 'vivo' : 'morto'}" onclick="toggleStatus(${i})">
+        ${player.alive ? '❤ Vivo' : '💀 Morto'}
+      </button>
+    `;
+
+    grid.appendChild(row);
+  });
+}
+
+function toggleStatus(i) {
+  playerStatuses[i].alive = !playerStatuses[i].alive;
+  renderStats();
+  renderPlayersGrid();
+}
+
+function togglePhase() {
+  if (isNight) {
+    isNight = false;
+    day++;
+  } else {
+    isNight = true;
+  }
+  updatePhaseBadge();
+  renderStats();
+  renderTips();
+}
+
+function updatePhaseBadge() {
+  const badge = document.getElementById('phase-badge');
+  if (isNight) {
+    badge.textContent = `🌙 Notte ${day}`;
+    badge.className = 'phase-badge notte';
+  } else {
+    badge.textContent = `☀ Giorno ${day}`;
+    badge.className = 'phase-badge giorno';
+  }
+}
+
+function renderTips() {
+  const container = document.getElementById('tip-cards');
+  const tips = isNight ? TIPS.notte : TIPS.giorno;
+  container.innerHTML = '';
+
+  tips.forEach(tip => {
+    const card = document.createElement('div');
+    card.className = 'tip-card';
+    card.onclick = () => {
+      const editor = document.getElementById('story-editor');
+      editor.value += (editor.value ? '\n\n' : '') + `[${tip.title}]\n${tip.text}`;
+    };
+    card.innerHTML = `
+      <div class="tip-card-title">${tip.title}</div>
+      <div class="tip-card-text">${tip.text} <em style="color:var(--gold-dim);font-size:0.8rem;">↗ clicca per aggiungere</em></div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function saveStory() {
+  const editor = document.getElementById('story-editor');
+  const content = document.getElementById('story-content');
+  if (content) {
+    content.textContent = editor.value;
+  }
+  // Visual feedback
+  const btn = event.target;
+  btn.textContent = '✓ Salvato';
+  setTimeout(() => { btn.textContent = 'Salva nota'; }, 1500);
+}
+
+function clearStory() {
+  document.getElementById('story-editor').value = '';
+}
+
+function newGame() {
+  if (!confirm('Iniziare una nuova partita? I dati attuali andranno persi.')) return;
+  players = [];
+  assignedRoles = [];
+  Object.keys(ROLES).forEach(k => { roleCounts[k] = ROLES[k].defaultCount; });
+  document.getElementById('player-list').innerHTML = '';
+  document.getElementById('setup-error').textContent = '';
+  renderRolesGrid();
+  validateSetup();
+  showScreen('screen-setup');
+}
+
+// =====================
+// UTILS
+// =====================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// Init
+renderRolesGrid();
+</script>
+</body>
+</html>
