@@ -217,6 +217,27 @@
   }
   .player-tag .remove:hover { color: var(--blood-light); }
 
+  .btn-balance {
+    width: 100%;
+    padding: 10px;
+    background: rgba(201,168,76,0.07);
+    border: 1px dashed rgba(201,168,76,0.3);
+    border-radius: 2px;
+    color: var(--gold-dim);
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 14px;
+  }
+  .btn-balance:hover {
+    background: rgba(201,168,76,0.14);
+    border-color: rgba(201,168,76,0.5);
+    color: var(--gold);
+    box-shadow: 0 0 14px rgba(201,168,76,0.1);
+  }
+
   .hint {
     font-family: 'IM Fell English', serif;
     font-style: italic;
@@ -880,6 +901,7 @@
     <!-- ROLES -->
     <div class="section-label">Ruoli</div>
     <div class="roles-grid" id="roles-grid"></div>
+    <button class="btn-balance" onclick="autoBalance()">⚖ Bilancia automaticamente</button>
     <div class="roles-summary" id="roles-summary">Aggiungi giocatori per configurare i ruoli</div>
 
     <div class="error-msg" id="setup-error"></div>
@@ -1413,8 +1435,63 @@ function showScreen(id) {
   window.scrollTo(0, 0);
 }
 
+function autoBalance() {
+  const n = players.length;
+  if (n < 4) {
+    document.getElementById('setup-error').textContent = 'Aggiungi almeno 4 giocatori prima di bilanciare!';
+    return;
+  }
+  document.getElementById('setup-error').textContent = '';
+
+  // Reset all
+  Object.keys(roleCounts).forEach(k => roleCounts[k] = 0);
+
+  // Lupi: ~1 ogni 4-5 giocatori (min 1, max ragionevole)
+  let lupi = Math.max(1, Math.floor(n / 4));
+
+  // Ruoli speciali in base al numero di giocatori
+  let veggente = n >= 5 ? 1 : 0;
+  let medico   = n >= 7 ? 1 : 0;
+  let strega   = n >= 10 ? 1 : 0;
+  let cacciatore = n >= 12 ? 1 : 0;
+
+  // Resto = contadini
+  let speciali = lupi + veggente + medico + strega + cacciatore;
+  let contadini = n - speciali;
+
+  roleCounts['lupo']      = lupi;
+  roleCounts['contadino'] = contadini;
+  roleCounts['veggente']  = veggente;
+  roleCounts['medico']    = medico;
+  roleCounts['strega']    = strega;
+  roleCounts['cacciatore']= cacciatore;
+
+  // Update UI counters
+  Object.keys(roleCounts).forEach(k => {
+    const el = document.getElementById(`count-${k}`);
+    if (el) el.textContent = roleCounts[k];
+  });
+
+  // Visual feedback on button
+  const btn = document.querySelector('.btn-balance');
+  btn.textContent = '✓ Bilanciato!';
+  btn.style.color = '#7dbe8a';
+  btn.style.borderColor = 'rgba(125,190,138,0.4)';
+  setTimeout(() => {
+    btn.textContent = '⚖ Bilancia automaticamente';
+    btn.style.color = '';
+    btn.style.borderColor = '';
+  }, 1800);
+
+  updateRolesSummary();
+  validateSetup();
+}
+
 // Init
 renderRolesGrid();
 </script>
+<div style="text-align:center; padding: 24px; font-family:'Cinzel Decorative', cursive; font-size:0.55rem; letter-spacing:0.3em; color:var(--gold-dim); opacity:0.5;">
+  made by NotCasper
+</div>
 </body>
 </html>
